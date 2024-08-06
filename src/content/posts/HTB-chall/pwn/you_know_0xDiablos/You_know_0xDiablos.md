@@ -249,11 +249,11 @@ In many calling conventions arguments are pushed onto the stack in reverse order
 and upon the start of a function call a stack frame is created and is represented this way :
 let's take flag() as an example
 
-|**flag() stack frame** |
----------------------
-| flag() address      |
-| some return address |
-|  flag args... |
+| **flag() stack frame** | 
+|------------------------|
+| <center> flag() address         |
+| <center> some return address    |
+| <center> flag args...           |
 
 now that thing are clear we just have to constructe out payload 
 which will look like :
