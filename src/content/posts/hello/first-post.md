@@ -3,7 +3,7 @@ title: pickle serializatoin
 published: 2024-06-24
 description: 'some picle stuff with serializatoin in java /javascript'
 image: './move.gif'
-tags: [serialisation,exploit]
+tags: [serialization,exploit]
 category: 'serialisation'
 draft: false
 ---
