@@ -16,7 +16,7 @@ ___
 
 + kick starting with nmap we can find that the open ports are `21 22 80 `
 + noting unusal , testing ftp with anonymous login failed .
-+ let's navigate to the main the website we find that the we are loged in by default as the user nathan and we have a few interesting options in a drop down menu.
++ let's navigate to the main the website we find that the we are logged in by default as the user nathan and we have a few interesting options in a drop down menu.
 
 
 ![overflow](./image.png)
@@ -26,7 +26,7 @@ ___
 
 ![/data/2](./image2.png)
 
-+ intereting it looks like some packet capture functionality , but we can see we got 0 packets , and if you click download you can see that the pcap also contains 0 packets , the only left option for us is to maybe fuzz the url `/data/1` trying '/data/0' we get new value like this :
++ intereting it looks like some packet capture functionality , but we can see we got 0 packets , and if you click download you can see that the pcap also contains 0 packets , the only left option for us is to maybe fuzz the url `/data/1` trying `/data/0` we get new value like this :
 ```
 Data Type
 	Value
