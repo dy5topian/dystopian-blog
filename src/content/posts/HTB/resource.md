@@ -12,9 +12,7 @@ draft: true
 
 ___
 _Diffeculty: MEDUIM_</br>
-TL.DR:
-
-___
+____
 
 
 ### solution:
